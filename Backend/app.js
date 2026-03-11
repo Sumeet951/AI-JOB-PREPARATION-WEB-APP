@@ -24,8 +24,10 @@ app.get("/",(req,res)=>{
 
 //Import all Routes
 import authRoutes from "./routes/auth.routes.js"
+import interviewRoutes from "./routes/interview.routes.js"
 //Default catch all route
 app.use("/api/auth",authRoutes);
+app.use("/api/interview",interviewRoutes)
 //custom error handling middlewares
 app.use(errorMiddleware)
 export default app
