@@ -4,6 +4,7 @@ import tokenBlacklistModel from "../models/blacklist.model.js";
 export const isLoggedIn = async (req, res, next) => {
   try {
     const { token } = req.cookies;
+    console.log("Token from cookie:", token); // Debugging line
     if (!token) {
       return next(
         new AppError(
@@ -16,6 +17,7 @@ export const isLoggedIn = async (req, res, next) => {
       token
     })
     if(isTokenBlacklisted){
+      console.log("Token is blacklisted"); // Debugging line
       return res.status(401).json({
         success:false,
         message:"Token is Invalid"

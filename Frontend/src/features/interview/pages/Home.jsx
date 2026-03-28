@@ -1,4 +1,8 @@
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router";
+import { generateInterviewReport, getAllInterviewReports } from "../../../redux/slices/InterviewSlice";
+import { logoutUser } from "../../../redux/slices/authSlice";
 
 export default function Home() {
   const [jobDescription, setJobDescription] = useState("");
@@ -6,6 +10,15 @@ export default function Home() {
   const [dragging, setDragging] = useState(false);
   const [fileName, setFileName] = useState(null);
   const fileInputRef = useRef(null);
+  const dispatch=useDispatch();
+  const navigate=useNavigate();
+  const interviewReports = useSelector((state)=>state.interview?.interviewReports || []);
+  const { isLoggedIn, userProfile } = useSelector((state) => state.auth);
+  
+  const handleLogout = async () => {
+    await dispatch(logoutUser());
+    navigate("/login");
+  };
 
   const maxChars = 5000;
 
@@ -19,6 +32,49 @@ export default function Home() {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) setFileName(file.name);
+  };
+  const handleSubmit=async(e)=>{
+    e.preventDefault();
+    // Implement form submission logic here, e.g., send data to backend API
+    const formData=new FormData();
+    formData.append("jobDescription",jobDescription);
+    formData.append("selfDescription",selfDescription);
+    if(fileInputRef.current?.files[0]){
+      formData.append("resume",fileInputRef.current.files[0]);
+    }
+    console.log("Form submitted with data:", {
+      jobDescription,
+      selfDescription,
+      resume: fileInputRef.current?.files[0]?.name || "No file uploaded"
+    });
+
+    // Dispatch the generateInterviewReport action with formData
+    const response=await dispatch(generateInterviewReport(formData));
+    console.log("Response from generateInterviewReport:", response);
+    if(response?.payload?.data?.data?._id){
+      const id=response.payload?.data?.data?._id;
+
+      navigate(`/interview/${id}`); // Navigate to the interview report page with the generated report ID
+    }
+
+  }
+
+  useEffect(()=>{
+    dispatch(getAllInterviewReports());
+  },[dispatch])
+
+  const formatDate = (value) => {
+    if (!value) return "";
+    return new Date(value).toLocaleDateString("en-US", {
+      month: "numeric",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const openReport = (id) => {
+    if (!id) return;
+    navigate(`/interview/${id}`);
   };
 
   return (
@@ -153,13 +209,40 @@ export default function Home() {
             <span className="text-xs text-gray-400">AI-Powered Strategy Generation • Approx 30s</span>
           </div>
 
-          <button className="flex items-center gap-2 bg-pink-600 hover:bg-pink-500 active:bg-pink-700 transition-colors text-white font-semibold px-6 py-3 rounded-xl shadow-lg shadow-pink-900/30 text-sm">
+          <button onClick={handleSubmit} className="flex items-center gap-2 bg-pink-600 hover:bg-pink-500 active:bg-pink-700 transition-colors text-white font-semibold px-6 py-3 rounded-xl shadow-lg shadow-pink-900/30 text-sm">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" />
             </svg>
             Generate My Interview Strategy
           </button>
         </div>
+      </div>
+
+      <div className="w-full max-w-5xl mt-10">
+        <h2 className="text-4xl font-bold text-gray-100 mb-5">My Recent Interview Plans</h2>
+
+        {interviewReports.length === 0 ? (
+          <div className="rounded-xl border border-gray-800 bg-gray-900/70 p-6 text-gray-400 text-sm">
+            No interview plans yet. Generate your first strategy above.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {interviewReports.slice(0, 6).map((report) => (
+              <button
+                key={report._id}
+                type="button"
+                onClick={() => openReport(report._id)}
+                className="text-left rounded-xl border border-gray-700 bg-gray-900 hover:bg-gray-800/70 transition-colors px-5 py-4"
+              >
+                <h3 className="text-4 text-gray-100 font-extrabold leading-tight mb-2">
+                  {report.title || "Interview Plan"}
+                </h3>
+                <p className="text-gray-300 text-2 mb-1">Generated on {formatDate(report.createdAt)}</p>
+                <p className="text-pink-400 text-2 font-bold">Match Score: {report.matchScore ?? 0}%</p>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

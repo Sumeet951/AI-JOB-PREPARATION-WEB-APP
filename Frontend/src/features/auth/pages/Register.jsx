@@ -26,7 +26,7 @@ const Register = () => {
     //api call
     const response=await dispatch(createAccount(signUpData));
     if(response.payload?.data?.message){
-      navigate("/");
+      navigate("/home");
     }
     setsignUpData({
       email:"",

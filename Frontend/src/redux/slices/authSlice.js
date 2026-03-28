@@ -7,6 +7,7 @@ const initialState = {
     isLoggedIn: localStorage.getItem("isLoggedIn") || false,
     data: localStorage.getItem("data") || {},
     userProfile:localStorage.getItem("userProfile") ||{},
+    role: localStorage.getItem("role") || "",
 }
 export const createAccount=createAsyncThunk("/auth/signup",async(data)=>{
     try{
@@ -77,7 +78,7 @@ const authSlice = createSlice({
         .addCase(loginAccount.fulfilled,(state,action)=>{
              localStorage.setItem("data",JSON.stringify(action?.payload?.data?.user));
              localStorage.setItem("isLoggedIn",true);
-            // localStorage.setItem("role",action?.payload?.data?.user?.role);
+            localStorage.setItem("role",action?.payload?.data?.user?.role);
             localStorage.setItem("userProfile",JSON.stringify(action?.payload?.data?.user));
             state.isLoggedIn=true;
             state.role=action?.payload?.data?.user?.role;
@@ -87,7 +88,7 @@ const authSlice = createSlice({
         .addCase(createAccount.fulfilled,(state,action)=>{
              localStorage.setItem("data",JSON.stringify(action?.payload?.data?.user));
              localStorage.setItem("isLoggedIn",true);
-            // localStorage.setItem("role",action?.payload?.data?.user?.role);
+            localStorage.setItem("role",action?.payload?.data?.user?.role);
             localStorage.setItem("userProfile",JSON.stringify(action?.payload?.data?.user));
             state.isLoggedIn=true;
             state.role=action?.payload?.data?.user?.role;

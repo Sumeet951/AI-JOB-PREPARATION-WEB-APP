@@ -4,16 +4,24 @@ import Login from './features/auth/pages/login'
 import Register from './features/auth/pages/Register'
 import Home from './features/interview/pages/Home'
 import Interview from './features/interview/pages/interview'
+import RequireAuth from './features/auth/components/RequireAuth'
 
 function App() {
 
   return (
     <>
     <Routes>
-      <Route path="/login" element={<Login/>}></Route>
+      <Route path="/" element={<Login/>}></Route>
       <Route path="/register" element={<Register/>}></Route>
-      <Route path="/" element={<Home/>}></Route>
+      
+      
+      
+      <Route element={<RequireAuth allowedRoles={["User","Admin"]}/>}>
+      <Route path="/home" element={<Home/>}></Route>
+      </Route>
+
       <Route path="/interview/:interviewId" element={<Interview/>}></Route>
+    
     </Routes>
     </>
   )

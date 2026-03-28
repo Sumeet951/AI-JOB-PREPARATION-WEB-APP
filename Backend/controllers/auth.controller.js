@@ -3,6 +3,13 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import AppError from "../utils/appError.js";
 import tokenBlacklistModel from "../models/blacklist.model.js";
+const cookieOptions=
+    {
+  httpOnly: true,
+  secure: 'false',
+  sameSite: "Lax",
+  maxAge: 24 * 60 * 60 * 1000, // 1 day
+}
 /**
      * @name registerUserController
      * @description register a new user,expects username,email and password in the request body
@@ -38,7 +45,7 @@ export const register=async(req,res,next)=>{
             {expiresIn:"1d"}
         )
         user.password=undefined;
-        res.cookie("token",token)
+        res.cookie("token",token,cookieOptions);
         res.status(201).json({
             success:true,
             message:"User registered Successfully",
@@ -77,7 +84,7 @@ export const login=async(req,res,next)=>{
         process.env.JWT_SECRET,
         {expiresIn:"1d"}
       )
-      res.cookie("token",token);
+      res.cookie("token",token,cookieOptions);
       user.password=undefined;
       res.status(200).json({
         success:true,
@@ -103,7 +110,7 @@ export const logout=async(req,res,next)=>{
     if(token){
         await tokenBlacklistModel.create({token})
     }
-    res.clearCookie("token")
+    res.clearCookie("token", cookieOptions);
     res.status(200).json({
         success:true,
         message:"User logged out succesfully"

@@ -8,7 +8,7 @@ const connectToDB=async()=>{
             }
     }
     catch(err){
-        console.log(error);
+        console.log(EvalError)
         process.exit(1);
     }
 }

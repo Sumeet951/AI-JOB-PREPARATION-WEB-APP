@@ -26,7 +26,7 @@ const Login = () => {
     }
     const response=await dispatch(loginAccount(LoginData));
     if(response.payload?.data){
-      navigate("/");
+      navigate("/home");
       
     }
     setLoginData({

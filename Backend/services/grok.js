@@ -1,8 +1,12 @@
 import OpenAI from "openai";
-import { z } from "zod";
 import dotenv from "dotenv";
 
 dotenv.config();
+import Groq from "groq-sdk";
+import { z } from "zod";
+
+const groq = new Groq();
+
 
 const client = new OpenAI({
   apiKey: process.env.GROQ_API_KEY,
@@ -52,34 +56,25 @@ Return ONLY JSON in this format:
  "title": "string",
  "matchScore": number,
  "technicalQuestions":[
-  {
-   "question":"string",
-   "intention":"string",
-   "answer":"string"
-  }
+  { "question":"string", "intention":"string", "answer":"string" }
  ],
  "behaviourQuestions":[
-  {
-   "question":"string",
-   "intention":"string",
-   "answer":"string"
-  }
+  { "question":"string", "intention":"string", "answer":"string" }
  ],
  "skillGaps":[
-  {
-   "skill":"string",
-   "severity":"low | medium | high"
-  }
+  { "skill":"string", "severity":"low | medium | high" }
  ],
  "preparationPlan":[
-  {
-   "day": number,
-   "focus":"string",
-   "tasks":["task1","task2"]
-  }
+  { "day": number, "focus":"string", "tasks":["task1","task2"] }
  ]
 }
 
+Constraints:
+- Provide AT LEAST 5 technicalQuestions.
+- Provide AT LEAST 3 behaviourQuestions.
+- Provide AT LEAST 3 skillGaps.
+- Provide a preparationPlan covering AT LEAST 7 days.
+- Fill all required fields, do not leave arrays empty.
 Resume:
 ${resume}
 
@@ -104,6 +99,12 @@ const response = await client.chat.completions.create({
 const text = response.choices[0].message.content;
 
 console.log("RAW RESPONSE:", text);
+// 👀 Log the raw text before parsing
+console.log("RAW RESPONSE:", text);
+
+// If you want to inspect the entire response object:
+console.log("FULL RESPONSE OBJECT:", JSON.stringify(response, null, 2));
+
 
 const jsonStart = text.indexOf("{");
 const jsonEnd = text.lastIndexOf("}");
@@ -112,6 +113,6 @@ const jsonString = text.slice(jsonStart, jsonEnd + 1);
 
 const parsed = JSON.parse(jsonString);
 
-return interviewReportSchema.parse(parsed);
+return parsed
 }
 

@@ -1,57 +1,60 @@
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useParams } from "react-router";
+import { getInterviewReport, generateResumePdf } from "../../../redux/slices/InterviewSlice";
 
-const REPORT = {
-  matchScore: 88,
-  technicalQuestions: [
-    {
-      question: "Explain the Node.js event loop and how it handles asynchronous I/O operations.",
-      intention: "To assess the candidate's deep understanding of Node.js internal architecture and non-blocking I/O.",
-      answer: "The candidate should explain the different phases of the event loop (timers, pending callbacks, idle/prepare, poll, check, close). They should mention how Libuv handles the thread pool and how the callback queue works with the call stack to ensure performance without blocking the main thread.",
-    },
-    {
-      question: "How do you optimize a MongoDB aggregation pipeline for high-volume data?",
-      intention: "To test practical experience with database performance and the candidate's claim of reducing response times by 35%.",
-      answer: "Focus on using $match as early as possible to reduce the dataset, ensuring fields used in $match and $sort are indexed, and avoiding $unwind if possible as it inflates the document count. Mention the use of 'explain()' to analyze execution plans.",
-    },
-    {
-      question: "Can you describe the Cache-Aside pattern and when you would use Redis in a Node.js application?",
-      intention: "To evaluate the candidate's understanding of caching strategies, given their basic knowledge of Redis.",
-      answer: "The candidate should explain that the application first checks the cache; if data is missing (cache miss), it fetches from the DB, stores it in the cache, and returns it. They should discuss TTL (Time to Live) and cache invalidation strategies to prevent stale data.",
-    },
-    {
-      question: "What are the challenges of migrating a monolithic application to a modular service-based architecture?",
-      intention: "To explore the candidate's experience with architectural changes and service boundaries.",
-      answer: "Discuss data consistency across services, communication overhead (REST vs gRPC), service discovery, and the complexity of managing multiple deployments.",
-    },
-  ],
-  behavioralQuestions: [
-    {
-      question: "Describe a time when you had to optimize a piece of code that was causing production delays. How did you identify the bottleneck?",
-      intention: "To evaluate problem-solving skills and the use of monitoring/profiling tools.",
-      answer: "The candidate should use the STAR method. They should mention using tools like Chrome DevTools, New Relic, or MongoDB Atlas Profiler, the specific metrics they looked at, and the measurable impact of their fix.",
-    },
-    {
-      question: "How do you approach learning a new technology, such as your recent work with the Gemini API?",
-      intention: "To assess adaptability and the ability to stay updated with industry trends.",
-      answer: "The candidate should describe their process: reading official documentation, building a proof-of-concept, understanding the limitations, and eventually integrating it into a structured project.",
-    },
-  ],
-  skillGaps: [
-    { skill: "Message Queues (Kafka/RabbitMQ)", severity: "high" },
-    { skill: "Advanced Docker & CI/CD Pipelines", severity: "medium" },
-    { skill: "Distributed Systems Design", severity: "medium" },
-    { skill: "Production-level Redis management", severity: "low" },
-  ],
-  preparationPlan: [
-    { day: 1, focus: "Node.js Internals & Streams", tasks: ["Deep dive into the Event Loop phases and process.nextTick vs setImmediate.", "Practice implementing Node.js Streams for handling large data sets."] },
-    { day: 2, focus: "Advanced MongoDB & Indexing", tasks: ["Study Compound Indexes, TTL Indexes, and Text Indexes.", "Practice writing complex Aggregation pipelines and using the .explain('executionStats') method."] },
-    { day: 3, focus: "Caching & Redis Strategies", tasks: ["Read about Redis data types beyond strings (Sets, Hashes, Sorted Sets).", "Implement a Redis-based rate limiter or a caching layer for a sample API."] },
-    { day: 4, focus: "System Design & Microservices", tasks: ["Study Microservices communication patterns (Synchronous vs Asynchronous).", "Learn about the API Gateway pattern and Circuit Breakers."] },
-    { day: 5, focus: "Message Queues & DevOps Basics", tasks: ["Watch introductory tutorials on RabbitMQ or Kafka.", "Dockerize a project and write a simple GitHub Actions workflow for CI."] },
-    { day: 6, focus: "Data Structures & Algorithms", tasks: ["Solve 5-10 Medium LeetCode problems focusing on Arrays, Strings, and Hash Maps.", "Review common sorting and searching algorithms."] },
-    { day: 7, focus: "Mock Interview & Project Review", tasks: ["Conduct a mock interview focusing on explaining the Real-time Chat Application architecture.", "Prepare concise summaries for all work experience bullets."] },
-  ],
-};
+// const REPORT = {
+//   matchScore: 88,
+//   technicalQuestions: [
+//     {
+//       question: "Explain the Node.js event loop and how it handles asynchronous I/O operations.",
+//       intention: "To assess the candidate's deep understanding of Node.js internal architecture and non-blocking I/O.",
+//       answer: "The candidate should explain the different phases of the event loop (timers, pending callbacks, idle/prepare, poll, check, close). They should mention how Libuv handles the thread pool and how the callback queue works with the call stack to ensure performance without blocking the main thread.",
+//     },
+//     {
+//       question: "How do you optimize a MongoDB aggregation pipeline for high-volume data?",
+//       intention: "To test practical experience with database performance and the candidate's claim of reducing response times by 35%.",
+//       answer: "Focus on using $match as early as possible to reduce the dataset, ensuring fields used in $match and $sort are indexed, and avoiding $unwind if possible as it inflates the document count. Mention the use of 'explain()' to analyze execution plans.",
+//     },
+//     {
+//       question: "Can you describe the Cache-Aside pattern and when you would use Redis in a Node.js application?",
+//       intention: "To evaluate the candidate's understanding of caching strategies, given their basic knowledge of Redis.",
+//       answer: "The candidate should explain that the application first checks the cache; if data is missing (cache miss), it fetches from the DB, stores it in the cache, and returns it. They should discuss TTL (Time to Live) and cache invalidation strategies to prevent stale data.",
+//     },
+//     {
+//       question: "What are the challenges of migrating a monolithic application to a modular service-based architecture?",
+//       intention: "To explore the candidate's experience with architectural changes and service boundaries.",
+//       answer: "Discuss data consistency across services, communication overhead (REST vs gRPC), service discovery, and the complexity of managing multiple deployments.",
+//     },
+//   ],
+//   behavioralQuestions: [
+//     {
+//       question: "Describe a time when you had to optimize a piece of code that was causing production delays. How did you identify the bottleneck?",
+//       intention: "To evaluate problem-solving skills and the use of monitoring/profiling tools.",
+//       answer: "The candidate should use the STAR method. They should mention using tools like Chrome DevTools, New Relic, or MongoDB Atlas Profiler, the specific metrics they looked at, and the measurable impact of their fix.",
+//     },
+//     {
+//       question: "How do you approach learning a new technology, such as your recent work with the Gemini API?",
+//       intention: "To assess adaptability and the ability to stay updated with industry trends.",
+//       answer: "The candidate should describe their process: reading official documentation, building a proof-of-concept, understanding the limitations, and eventually integrating it into a structured project.",
+//     },
+//   ],
+//   skillGaps: [
+//     { skill: "Message Queues (Kafka/RabbitMQ)", severity: "high" },
+//     { skill: "Advanced Docker & CI/CD Pipelines", severity: "medium" },
+//     { skill: "Distributed Systems Design", severity: "medium" },
+//     { skill: "Production-level Redis management", severity: "low" },
+//   ],
+//   preparationPlan: [
+//     { day: 1, focus: "Node.js Internals & Streams", tasks: ["Deep dive into the Event Loop phases and process.nextTick vs setImmediate.", "Practice implementing Node.js Streams for handling large data sets."] },
+//     { day: 2, focus: "Advanced MongoDB & Indexing", tasks: ["Study Compound Indexes, TTL Indexes, and Text Indexes.", "Practice writing complex Aggregation pipelines and using the .explain('executionStats') method."] },
+//     { day: 3, focus: "Caching & Redis Strategies", tasks: ["Read about Redis data types beyond strings (Sets, Hashes, Sorted Sets).", "Implement a Redis-based rate limiter or a caching layer for a sample API."] },
+//     { day: 4, focus: "System Design & Microservices", tasks: ["Study Microservices communication patterns (Synchronous vs Asynchronous).", "Learn about the API Gateway pattern and Circuit Breakers."] },
+//     { day: 5, focus: "Message Queues & DevOps Basics", tasks: ["Watch introductory tutorials on RabbitMQ or Kafka.", "Dockerize a project and write a simple GitHub Actions workflow for CI."] },
+//     { day: 6, focus: "Data Structures & Algorithms", tasks: ["Solve 5-10 Medium LeetCode problems focusing on Arrays, Strings, and Hash Maps.", "Review common sorting and searching algorithms."] },
+//     { day: 7, focus: "Mock Interview & Project Review", tasks: ["Conduct a mock interview focusing on explaining the Real-time Chat Application architecture.", "Prepare concise summaries for all work experience bullets."] },
+//   ],
+// };
 
 const NAV_ITEMS = [
   {
@@ -66,6 +69,7 @@ const NAV_ITEMS = [
     id: "roadmap", label: "Road Map",
     icon: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>,
   },
+
 ];
 
 const severityStyles = {
@@ -157,6 +161,17 @@ const ScoreRing = ({ score }) => {
 
 export default function Interview() {
   const [activeNav, setActiveNav] = useState("technical");
+  const REPORT=useSelector((state)=>state.interview?.interviewReport);
+  const {interviewId} = useParams();
+  const dispatch=useDispatch();
+  async function fetchReport(){
+    await dispatch(getInterviewReport(interviewId));
+  }
+  useEffect(()=>{ 
+    if(interviewId){
+      fetchReport();
+    }},[interviewId])
+
 
   return (
     <div className="min-h-screen text-white" style={{ backgroundColor: "#030712", fontFamily: "'Segoe UI', sans-serif" }}>
@@ -182,6 +197,29 @@ export default function Interview() {
               {item.label}
             </button>
           ))}
+          
+          <div className="mt-auto pt-4 border-t" style={{ borderColor: "#1f2937" }}>
+            <button
+              onClick={() => {
+                dispatch(generateResumePdf({ interviewId, data: REPORT }));
+              }}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all"
+              style={{
+                backgroundColor: "rgba(236,72,153,0.2)",
+                color: "#f472b6",
+                border: "1px solid rgba(236,72,153,0.4)",
+              }}
+              onMouseOver={e => { e.currentTarget.style.backgroundColor = "rgba(236,72,153,0.3)"; }}
+              onMouseOut={e => { e.currentTarget.style.backgroundColor = "rgba(236,72,153,0.2)"; }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Download Resume
+            </button>
+          </div>
         </nav>
 
         {/* ── Center Content ── */}
@@ -191,10 +229,10 @@ export default function Interview() {
               <div className="flex items-center gap-3 mb-5">
                 <h2 className="text-xl font-bold text-white">Technical Questions</h2>
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "rgba(236,72,153,0.15)", color: "#f472b6", border: "1px solid rgba(236,72,153,0.3)" }}>
-                  {REPORT.technicalQuestions.length} questions
+                  {REPORT?.technicalQuestions?.length ?? 0} questions
                 </span>
               </div>
-              {REPORT.technicalQuestions.map((q, i) => <QuestionCard key={i} item={q} index={i} />)}
+              {REPORT?.technicalQuestions?.map((q, i) => <QuestionCard key={i} item={q} index={i} />)}
             </section>
           )}
 
@@ -203,10 +241,10 @@ export default function Interview() {
               <div className="flex items-center gap-3 mb-5">
                 <h2 className="text-xl font-bold text-white">Behavioral Questions</h2>
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "rgba(236,72,153,0.15)", color: "#f472b6", border: "1px solid rgba(236,72,153,0.3)" }}>
-                  {REPORT.behavioralQuestions.length} questions
+                  {REPORT?.behaviourQuestions?.length ?? 0} questions
                 </span>
               </div>
-              {REPORT.behavioralQuestions.map((q, i) => <QuestionCard key={i} item={q} index={i} />)}
+              {REPORT?.behaviourQuestions?.map((q, i) => <QuestionCard key={i} item={q} index={i} />)}
             </section>
           )}
 
@@ -215,10 +253,10 @@ export default function Interview() {
               <div className="flex items-center gap-3 mb-5">
                 <h2 className="text-xl font-bold text-white">Preparation Road Map</h2>
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: "rgba(236,72,153,0.15)", color: "#f472b6", border: "1px solid rgba(236,72,153,0.3)" }}>
-                  {REPORT.preparationPlan.length}-day plan
+                  {REPORT?.preparationPlan?.length ?? 0}-day plan
                 </span>
               </div>
-              {REPORT.preparationPlan.map(day => <RoadMapDay key={day.day} day={day} />)}
+              {REPORT?.preparationPlan?.map(day => <RoadMapDay key={day.day} day={day} />)}
             </section>
           )}
         </main>
@@ -229,7 +267,7 @@ export default function Interview() {
           {/* Match Score */}
           <div className="flex flex-col items-center gap-2">
             <p className="text-xs uppercase tracking-widest" style={{ color: "#6b7280" }}>Match Score</p>
-            <ScoreRing score={REPORT.matchScore} />
+            <ScoreRing score={REPORT?.matchScore ?? 0} />
             <p className="text-xs text-center font-medium" style={{ color: "#4ade80" }}>Strong match for this role</p>
           </div>
 
@@ -239,7 +277,7 @@ export default function Interview() {
           <div>
             <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#6b7280" }}>Skill Gaps</p>
             <div className="flex flex-col gap-2">
-              {REPORT.skillGaps.map((gap, i) => {
+              {REPORT?.skillGaps?.map((gap, i) => {
                 const s = severityStyles[gap.severity];
                 return (
                   <span key={i} className="text-xs font-medium px-2 py-1.5 rounded-lg" style={{ backgroundColor: s.bg, border: `1px solid ${s.border}`, color: s.color }}>
