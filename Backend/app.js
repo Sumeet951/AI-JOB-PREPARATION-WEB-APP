@@ -13,7 +13,7 @@ app.use(express.urlencoded({extended:true}))
 //Third Party
 app.use(cookieParser());
 app.use(cors({
-    origin: ["http://localhost:5173", "https://ai-job-preparation-web-app.vercel.app/"], // add your frontend URL(s) here
+    origin: ["http://localhost:5173", "https://ai-job-preparation-web-app.vercel.app"], // add your frontend URL(s) here
     credentials: true,
 }));
 app.use(morgan('dev'));
