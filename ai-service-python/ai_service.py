@@ -95,9 +95,7 @@ Job Description: {job_description}
 # -----------------------------
 
 # IMPORTANT for Windows
-config = pdfkit.configuration(
-    wkhtmltopdf=r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
-)
+config = pdfkit.configuration()  # auto-detect
 
 
 def generate_pdf_from_html(html):
