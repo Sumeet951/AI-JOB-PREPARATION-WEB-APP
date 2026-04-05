@@ -128,7 +128,7 @@ import axios from "axios";
 export const generateAIReport = async (data) => {
 
     const response = await axios.post(
-        "http://127.0.0.1:8000/generate-report",
+        "https://ai-job-preparation-web-app-1.onrender.com/generate-report",
         data
     );
 
